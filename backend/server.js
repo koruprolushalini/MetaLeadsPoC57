@@ -101,10 +101,7 @@ async function processWebhook(body) {
       try {
         const lead = await fetchLeadDetails(leadId);
 
-        console.log(
-          "Lead details received:",
-          JSON.stringify(lead)
-        );
+        console.log("Lead details received successfully:", lead.id);
 
         // Add the newest lead to the beginning
         recentLeads.unshift(lead);
