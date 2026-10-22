@@ -1,56 +1,90 @@
-# Welcome to your Expo app 👋
+# Meta Leads Real-Time Dashboard
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A proof of concept that receives Meta Lead Ads webhook notifications, fetches lead details, and delivers lead updates to a React Native Expo dashboard through WebSockets.
 
-## Get started
+## Features
 
-1. Install dependencies
+- Receives Meta `leadgen` webhook notifications.
+- Verifies Meta webhook subscriptions.
+- Fetches lead details using the Meta Graph API.
+- Sends lead updates to connected dashboard clients over WebSockets.
+- Displays recent leads and WebSocket connection status.
+- Skips duplicate lead IDs during the current backend process.
 
-   ```bash
-   npm install
-   ```
+## Architecture
 
-2. Start the app
+1. Meta Lead Ads generates a lead event.
+2. Meta sends a webhook notification to the Express backend through the public HTTPS ngrok URL.
+3. The backend acknowledges the webhook and processes the lead notification.
+4. The backend fetches lead details from the Meta Graph API.
+5. The backend broadcasts the lead to connected WebSocket clients.
+6. The Expo app updates the dashboard without requiring a manual refresh.
 
-   ```bash
-   npx expo start
-   ```
+## Prerequisites
 
-In the output, you'll find options to open the app in a
+- Node.js and npm
+- Expo Go on a compatible mobile device
+- A Meta developer app with Lead Ads webhook access
+- ngrok for exposing the local backend during development
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Run locally
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### 1. Start the backend
 
-## Get a fresh project
-
-When you're ready, run:
+Open a terminal:
 
 ```bash
-npm run reset-project
+cd backend
+npm install
+npm start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+The backend should listen on port 3000.
 
-### Other setup steps
+### 2. Configure environment variables
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+Create a `backend/.env` file containing the required Meta credentials and webhook verification token. Use the variable names expected by `backend/server.js`.
 
-## Learn more
+Do not commit `.env` or share access tokens publicly.
 
-To learn more about developing your project with Expo, look at the following resources:
+### 3. Start ngrok
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+In a separate terminal:
 
-## Join the community
+```bash
+ngrok http 3000
+```
 
-Join our community of developers creating universal apps.
+Configure the Meta webhook callback using the current HTTPS ngrok URL followed by `/webhook`. Update the callback URL whenever the ngrok URL changes.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+### 4. Start the Expo app
+
+From the project root:
+
+```bash
+npx expo start --lan
+```
+
+Connect your phone and laptop to the same Wi-Fi network, then scan the QR code in Expo Go.
+
+## Testing performed
+
+- Confirmed that Meta webhook requests reached the backend.
+- Confirmed that the dashboard can display test lead data.
+- Replayed a webhook and verified that a duplicate lead ID was skipped.
+- Verified that the dashboard reconnected after reopening Expo Go.
+- Observed lead updates in the dashboard during webhook replay testing.
+
+## Assumptions and limitations
+
+- This is a development proof of concept, not a production-ready deployment.
+- Duplicate lead IDs are tracked in memory and are not persisted across backend restarts.
+- ngrok provides temporary development access to the local backend.
+- Meta access tokens can expire and may need renewal.
+- Production deployment should add persistent storage, stronger webhook validation, secure credential management, monitoring, and more robust error handling.
+
+## Security
+
+- Keep access tokens and verification secrets in environment variables.
+- Never commit `.env` files or expose credentials in screenshots or logs.
+- Use test leads and avoid exposing real customer information in demonstrations.
